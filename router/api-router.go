@@ -132,6 +132,10 @@ func SetApiRouter(router *gin.Engine) {
 			tokenRoute.DELETE("/:id", controller.DeleteToken)
 			tokenRoute.POST("/batch", controller.DeleteTokenBatch)
 		}
+
+		// 不需要认证的token余额查询API
+		apiRouter.GET("/token/balance", controller.GetTokenBalance)
+
 		redemptionRoute := apiRouter.Group("/redemption")
 		redemptionRoute.Use(middleware.AdminAuth())
 		{

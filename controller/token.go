@@ -5,6 +5,7 @@ import (
 	"one-api/common"
 	"one-api/model"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -232,5 +233,60 @@ func DeleteTokenBatch(c *gin.Context) {
 		"success": true,
 		"message": "",
 		"data":    count,
+	})
+}
+
+// GetTokenBalance 通过token key查询余额信息
+func GetTokenBalance(c *gin.Context) {
+	key := c.Query("key")
+	if key == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "请提供token key参数",
+		})
+		return
+	}
+
+	// 去除可能的sk-前缀
+	key = strings.TrimPrefix(key, "sk-")
+	
+	// 获取token信息
+	token, err := model.GetTokenByKey(key, false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "无效的token或token不存在",
+		})
+		return
+	}
+
+	// 检查token状态
+	if token.Status != common.TokenStatusEnabled {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "token状态不可用",
+		})
+		return
+	}
+
+	// 检查token是否过期
+	if token.ExpiredTime != -1 && token.ExpiredTime < common.GetTimestamp() {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "token已过期",
+		})
+		return
+	}
+
+	// 返回余额信息
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data": gin.H{
+			"remain_quota":    token.RemainQuota,
+			"unlimited_quota": token.UnlimitedQuota,
+			"expired_time":    token.ExpiredTime,
+			"status":          token.Status,
+		},
 	})
 }
