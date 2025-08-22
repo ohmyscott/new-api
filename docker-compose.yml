@@ -12,7 +12,7 @@ services:
       - /home/wyf0931/new-api:/data  # 使用指定的挂载路径
       - /home/wyf0931/new-api/logs:/app/logs
     environment:
-      - SQLITE_PATH=/data/sqlite.db  # SQLite数据库路径
+      - SQLITE_PATH=/data/one-api.db  # SQLite数据库路径
       - TZ=Asia/Shanghai
       - ERROR_LOG_ENABLED=true # 是否启用错误日志记录
       - MEMORY_CACHE_ENABLED=true # 启用内存缓存
