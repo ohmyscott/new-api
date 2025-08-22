@@ -2,15 +2,15 @@ version: '3.4'
 
 services:
   new-api:
-    image: calciumion/new-api:latest
+    build: .
     container_name: new-api
     restart: always
     command: --log-dir /app/logs
     ports:
       - "3000:3000"
     volumes:
-      - ~/new-api:/data  # 使用指定的挂载路径
-      - ./logs:/app/logs
+      - /home/wyf0931/new-api:/data  # 使用指定的挂载路径
+      - /home/wyf0931/new-api/logs:/app/logs
     environment:
       - SQLITE_PATH=/data/sqlite.db  # SQLite数据库路径
       - TZ=Asia/Shanghai
