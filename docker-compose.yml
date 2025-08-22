@@ -9,8 +9,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/wyf0931/new-api:/data  # 使用指定的挂载路径
-      - /home/wyf0931/new-api/logs:/app/logs
+      - /home/wyf0931/data/new-api:/data  # 使用指定的挂载路径
+      - /home/wyf0931/data/new-api/logs:/app/logs
     environment:
       - SQLITE_PATH=/data/one-api.db  # SQLite数据库路径
       - TZ=Asia/Shanghai
