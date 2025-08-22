@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	common2 "one-api/common"
+	"one-api/logger"
 	"one-api/relay/common"
 	"one-api/relay/constant"
 	"one-api/relay/helper"
@@ -181,7 +182,7 @@ func sendPingData(c *gin.Context, mutex *sync.Mutex) error {
 
 		err := helper.PingData(c)
 		if err != nil {
-			common2.LogError(c, "SSE ping error: "+err.Error())
+			logger.LogError(c, "SSE ping error: "+err.Error())
 			done <- err
 			return
 		}
@@ -223,7 +224,7 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 		helper.SetEventStreamHeaders(c)
 		// 处理流式请求的 ping 保活
 		generalSettings := operation_setting.GetGeneralSetting()
-		if generalSettings.PingIntervalEnabled {
+		if generalSettings.PingIntervalEnabled && !info.DisablePing {
 			pingInterval := time.Duration(generalSettings.PingIntervalSeconds) * time.Second
 			stopPinger = startPingKeepAlive(c, pingInterval)
 			// 使用defer确保在任何情况下都能停止ping goroutine

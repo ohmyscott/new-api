@@ -24,7 +24,14 @@ Task 任务通过平台、Action 区分任务
 */
 func RelayTaskSubmit(c *gin.Context, relayMode int) (taskErr *dto.TaskError) {
 	platform := constant.TaskPlatform(c.GetString("platform"))
-	relayInfo := relaycommon.GenTaskRelayInfo(c)
+	if platform == "" {
+		platform = GetTaskPlatform(c)
+	}
+
+	relayInfo, err := relaycommon.GenTaskRelayInfo(c)
+	if err != nil {
+		return service.TaskErrorWrapper(err, "gen_relay_info_failed", http.StatusInternalServerError)
+	}
 
 	adaptor := GetTaskAdaptor(platform)
 	if adaptor == nil {
@@ -94,7 +101,7 @@ func RelayTaskSubmit(c *gin.Context, relayMode int) (taskErr *dto.TaskError) {
 			c.Set("channel_id", originTask.ChannelId)
 			c.Request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", channel.Key))
 
-			relayInfo.BaseUrl = channel.GetBaseURL()
+			relayInfo.ChannelBaseUrl = channel.GetBaseURL()
 			relayInfo.ChannelId = originTask.ChannelId
 		}
 	}
@@ -124,7 +131,7 @@ func RelayTaskSubmit(c *gin.Context, relayMode int) (taskErr *dto.TaskError) {
 
 			err := service.PostConsumeQuota(relayInfo.RelayInfo, quota, 0, true)
 			if err != nil {
-				common.SysError("error consuming token remain quota: " + err.Error())
+				common.SysLog("error consuming token remain quota: " + err.Error())
 			}
 			if quota != 0 {
 				tokenName := c.GetString("token_name")
@@ -146,7 +153,6 @@ func RelayTaskSubmit(c *gin.Context, relayMode int) (taskErr *dto.TaskError) {
 					Quota:     quota,
 					Content:   logContent,
 					TokenId:   relayInfo.TokenId,
-					UserQuota: userQuota,
 					Group:     relayInfo.UsingGroup,
 					Other:     other,
 				})
@@ -178,7 +184,7 @@ func RelayTaskSubmit(c *gin.Context, relayMode int) (taskErr *dto.TaskError) {
 var fetchRespBuilders = map[int]func(c *gin.Context) (respBody []byte, taskResp *dto.TaskError){
 	relayconstant.RelayModeSunoFetchByID:  sunoFetchByIDRespBodyBuilder,
 	relayconstant.RelayModeSunoFetch:      sunoFetchRespBodyBuilder,
-	relayconstant.RelayModeKlingFetchByID: videoFetchByIDRespBodyBuilder,
+	relayconstant.RelayModeVideoFetchByID: videoFetchByIDRespBodyBuilder,
 }
 
 func RelayTaskFetch(c *gin.Context, relayMode int) (taskResp *dto.TaskError) {
@@ -255,6 +261,9 @@ func sunoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *dt
 
 func videoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *dto.TaskError) {
 	taskId := c.Param("task_id")
+	if taskId == "" {
+		taskId = c.GetString("task_id")
+	}
 	userId := c.GetInt("id")
 
 	originTask, exist, err := model.GetByTaskId(userId, taskId)

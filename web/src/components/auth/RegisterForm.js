@@ -1,3 +1,22 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -61,6 +80,8 @@ const RegisterForm = () => {
   const [verificationCodeLoading, setVerificationCodeLoading] = useState(false);
   const [otherRegisterOptionsLoading, setOtherRegisterOptionsLoading] = useState(false);
   const [wechatCodeSubmitLoading, setWechatCodeSubmitLoading] = useState(false);
+  const [disableButton, setDisableButton] = useState(false);
+  const [countdown, setCountdown] = useState(30);
 
   const logo = getLogo();
   const systemName = getSystemName();
@@ -86,6 +107,19 @@ const RegisterForm = () => {
       setTurnstileSiteKey(status.turnstile_site_key);
     }
   }, [status]);
+
+  useEffect(() => {
+    let countdownInterval = null;
+    if (disableButton && countdown > 0) {
+      countdownInterval = setInterval(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setDisableButton(false);
+      setCountdown(30);
+    }
+    return () => clearInterval(countdownInterval); // Clean up on unmount
+  }, [disableButton, countdown]);
 
   const onWeChatLoginClicked = () => {
     setWechatLoading(true);
@@ -179,6 +213,7 @@ const RegisterForm = () => {
       const { success, message } = res.data;
       if (success) {
         showSuccess('验证码发送成功，请检查你的邮箱！');
+        setDisableButton(true); // 发送成功后禁用按钮，开始倒计时
       } else {
         showError(message);
       }
@@ -435,9 +470,10 @@ const RegisterForm = () => {
                         <Button
                           onClick={sendVerificationCode}
                           loading={verificationCodeLoading}
+                          disabled={disableButton || verificationCodeLoading}
                           size="small"
                         >
-                          {t('获取验证码')}
+                          {disableButton ? `${t('重新发送')} (${countdown})` : t('获取验证码')}
                         </Button>
                       }
                     />
@@ -540,7 +576,7 @@ const RegisterForm = () => {
       {/* 背景模糊晕染球 */}
       <div className="blur-ball blur-ball-indigo" style={{ top: '-80px', right: '-80px', transform: 'none' }} />
       <div className="blur-ball blur-ball-teal" style={{ top: '50%', left: '-120px' }} />
-      <div className="w-full max-w-sm mt-[64px]">
+      <div className="w-full max-w-sm mt-[60px]">
         {showEmailRegister || !(status.github_oauth || status.oidc_enabled || status.wechat_login || status.linuxdo_oauth || status.telegram_oauth)
           ? renderEmailRegisterForm()
           : renderOAuthOptions()}
