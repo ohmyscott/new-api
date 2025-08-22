@@ -1,3 +1,4 @@
+# Image Name: new-api-scott
 FROM oven/bun:latest AS builder
 
 WORKDIR /build

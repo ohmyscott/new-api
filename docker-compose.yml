@@ -3,6 +3,7 @@ version: '3.4'
 services:
   new-api-scott:
     build: .
+    image: new-api-scott
     container_name: new-api-scott
     restart: always
     command: --log-dir /app/logs
