@@ -1,9 +1,9 @@
 version: '3.4'
 
 services:
-  new-api:
+  new-api-scott:
     build: .
-    container_name: new-api
+    container_name: new-api-scott
     restart: always
     command: --log-dir /app/logs
     ports:
